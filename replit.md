@@ -54,6 +54,7 @@ The application has basic user schema defined but authentication is not fully im
 
 ## External Dependencies
 
+- **API Communication**: Axios for HTTP requests to Python backend API
 - **Database**: Neon Database (PostgreSQL) for production data storage
 - **UI Framework**: Radix UI for accessible component primitives
 - **Styling**: Tailwind CSS for utility-first styling
@@ -61,3 +62,11 @@ The application has basic user schema defined but authentication is not fully im
 - **Development**: Replit-specific plugins for development environment integration
 - **Type Safety**: TypeScript throughout the stack with shared schemas
 - **Validation**: Zod for runtime type validation and form schemas
+
+## Recent Changes (January 2025)
+
+- **API Integration**: Replaced built-in Express server with axios-based API client for Python backend
+- **AI-Powered Search**: Enhanced search functionality with automatic detection of natural language queries
+- **Environment Configuration**: Added support for VITE_API_URL environment variable to configure Python API endpoint
+- **Search Intelligence**: Implemented smart routing between regular search and AI search based on query patterns
+- **Visual Indicators**: Added AI search badges and animations to indicate when AI-powered search is active
