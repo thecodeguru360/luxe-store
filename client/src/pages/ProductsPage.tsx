@@ -3,11 +3,12 @@ import { useLocation } from 'wouter';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductFilters } from '@/components/ProductFilters';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/services/api';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { type ProductType } from '@shared/schema';
 
 export function ProductsPage() {
@@ -28,9 +29,23 @@ export function ProductsPage() {
     ...(searchQuery && { search: searchQuery }),
   };
 
+  // Use AI-powered search for natural language queries, fallback to regular search
+  const isAiSearch = searchQuery && (
+    searchQuery.toLowerCase().includes('show me') ||
+    searchQuery.toLowerCase().includes('find') ||
+    searchQuery.toLowerCase().includes('looking for') ||
+    searchQuery.length > 30 // Longer queries are likely natural language
+  );
+
   const { data: products = [], isLoading } = useQuery({
-    queryKey: ['/api/products', filters],
-    queryFn: () => api.getProducts(filters),
+    queryKey: isAiSearch ? ['/api/ai-search', filters] : ['/api/products', filters],
+    queryFn: () => {
+      if (isAiSearch && searchQuery) {
+        const { search, ...otherFilters } = filters;
+        return api.aiSearch(searchQuery, otherFilters);
+      }
+      return api.getProducts(filters);
+    },
   });
 
   // Sort products based on selected criteria
@@ -98,7 +113,15 @@ export function ProductsPage() {
         <div className="lg:w-3/4">
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-            <h2 className="text-2xl font-bold mb-4 sm:mb-0">{getPageTitle()}</h2>
+            <div className="flex items-center space-x-3 mb-4 sm:mb-0">
+              <h2 className="text-2xl font-bold">{getPageTitle()}</h2>
+              {isAiSearch && (
+                <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-blue-200">
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  AI Search
+                </Badge>
+              )}
+            </div>
             <div className="flex items-center space-x-4">
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="w-48">
