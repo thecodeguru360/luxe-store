@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { updateFilter, clearFilters } from '@/store/productSlice';
-import { type ProductType } from '@shared/schema';
+import { type ProductType } from '@/types/schema';
 
 const categories: { name: string; value: ProductType }[] = [
   { name: 'Shoes', value: 'Shoes' },

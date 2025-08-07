@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { type Product, type Category, type ProductType } from '@shared/schema';
+import { type Product, type Category, type ProductType } from '@/types/schema';
 
 export interface ProductFilters {
   type?: ProductType;

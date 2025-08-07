@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@/services/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
-import { type ProductType } from '@shared/schema';
+import { type ProductType } from '@/types/schema';
 
 export function ProductsPage() {
   const [location] = useLocation();

@@ -6,7 +6,7 @@ import { removeFromCart, updateQuantity, toggleCart, setCartOpen } from '@/store
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/services/api';
 import { useLocation } from 'wouter';
-import { type Product } from '@shared/schema';
+import { type Product } from '@/types/schema';
 
 export function CartOffcanvas() {
   const [, setLocation] = useLocation();
