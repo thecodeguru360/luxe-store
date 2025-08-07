@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { type Product, type ProductType } from '@shared/schema';
+import { type Product, type ProductType } from '@/types/schema';
 
 interface ProductFilters {
   type?: ProductType;
