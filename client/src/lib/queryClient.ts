@@ -7,7 +7,7 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-const baseURL = "http://127.0.0.1:5300"
+const baseURL = import.meta.env.VITE_API_URL || "http://127.0.0.1:5300"
 
 export async function apiRequest(
   method: string,
