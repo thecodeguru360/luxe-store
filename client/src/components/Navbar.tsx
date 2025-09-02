@@ -1,35 +1,46 @@
-import { useState } from 'react';
-import { Link, useLocation } from 'wouter';
-import { Search, ShoppingBag, User, Menu, X, ChevronDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useAppDispatch, useAppSelector } from '@/store';
-import { toggleCart } from '@/store/cartSlice';
-import { setSearchQuery } from '@/store/productSlice';
+import { useState } from "react";
+import { Link, useLocation } from "wouter";
+import { Search, ShoppingBag, User, Menu, X, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { toggleCart } from "@/store/cartSlice";
+import { setSearchQuery } from "@/store/productSlice";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+} from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/services/api";
 
 export function Navbar() {
   const [, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchInput, setSearchInput] = useState('');
-  
+  const [searchInput, setSearchInput] = useState("");
+
   const dispatch = useAppDispatch();
-  const cartItems = useAppSelector(state => state.cart.items);
+  const cartItems = useAppSelector((state) => state.cart.items);
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  const brands = ['Nike', 'Adidas', 'Gucci', 'Chanel', 'Ray-Ban', 'Levi\'s', 'Tiffany'];
+  const {
+    data: brands,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["/api/products/brands"],
+    queryFn: () => api.getBrands(),
+    enabled: true,
+  });
+
   const categories = [
-    { name: 'Shoes', value: 'Shoes' },
-    { name: 'Handbags', value: 'Handbag' },
-    { name: 'Makeup', value: 'Makeup' },
-    { name: 'Accessories', value: 'Accessory' },
-    { name: 'Clothing', value: 'Clothing' },
+    { name: "Shoes", value: "Shoes" },
+    { name: "Handbags", value: "Handbag" },
+    { name: "Makeup", value: "Makeup" },
+    { name: "Accessories", value: "Accessory" },
+    { name: "Clothing", value: "Clothing" },
   ];
 
   const handleSearch = (e: React.FormEvent) => {
@@ -51,7 +62,9 @@ export function Navbar() {
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/">
-              <h1 className="text-2xl font-bold text-gray-900 cursor-pointer">StyleHub</h1>
+              <h1 className="text-2xl font-bold text-gray-900 cursor-pointer">
+                Luxe
+              </h1>
             </Link>
           </div>
 
@@ -63,8 +76,8 @@ export function Navbar() {
                 <ChevronDown className="h-4 w-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                {brands.map((brand) => (
-                  <DropdownMenuItem 
+                {brands?.map((brand) => (
+                  <DropdownMenuItem
                     key={brand}
                     onClick={() => setLocation(`/products?brand=${brand}`)}
                   >
@@ -81,7 +94,7 @@ export function Navbar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 {categories.map((category) => (
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     key={category.value}
                     onClick={() => handleCategoryClick(category.value)}
                   >
@@ -91,7 +104,10 @@ export function Navbar() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Link href="/products" className="text-gray-700 hover:text-gray-900">
+            <Link
+              href="/products"
+              className="text-gray-700 hover:text-gray-900"
+            >
               All Products
             </Link>
           </div>
@@ -115,10 +131,10 @@ export function Navbar() {
             <Button variant="ghost" size="icon">
               <User className="h-5 w-5" />
             </Button>
-            
-            <Button 
-              variant="ghost" 
-              size="icon" 
+
+            <Button
+              variant="ghost"
+              size="icon"
               className="relative"
               onClick={() => dispatch(toggleCart())}
             >
@@ -169,7 +185,7 @@ export function Navbar() {
 
                   <div className="space-y-2">
                     <h3 className="font-semibold">Brands</h3>
-                    {brands.map((brand) => (
+                    {brands?.map((brand) => (
                       <Button
                         key={brand}
                         variant="ghost"
@@ -185,8 +201,8 @@ export function Navbar() {
                   </div>
 
                   <Link href="/products">
-                    <Button 
-                      variant="ghost" 
+                    <Button
+                      variant="ghost"
                       className="w-full justify-start"
                       onClick={() => setMobileMenuOpen(false)}
                     >

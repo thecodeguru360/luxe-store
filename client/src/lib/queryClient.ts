@@ -1,13 +1,13 @@
-import { QueryClient, QueryFunction } from "@tanstack/react-query"
+import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText
-    throw new Error(`${res.status}: ${text}`)
+    const text = (await res.text()) || res.statusText;
+    throw new Error(`${res.status}: ${text}`);
   }
 }
 
-const baseURL = import.meta.env.VITE_API_URL || "http://127.0.0.1:5300"
+const baseURL = import.meta.env.VITE_API_URL || "https://webnbit.com:5300";
 
 export async function apiRequest(
   method: string,
@@ -19,29 +19,29 @@ export async function apiRequest(
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
-  })
+  });
 
-  await throwIfResNotOk(res)
-  return res
+  await throwIfResNotOk(res);
+  return res;
 }
 
-type UnauthorizedBehavior = "returnNull" | "throw"
+type UnauthorizedBehavior = "returnNull" | "throw";
 export const getQueryFn: <T>(options: {
-  on401: UnauthorizedBehavior
+  on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     const res = await fetch(queryKey.join("/") as string, {
       credentials: "include",
-    })
+    });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null
+      return null;
     }
 
-    await throwIfResNotOk(res)
-    return await res.json()
-  }
+    await throwIfResNotOk(res);
+    return await res.json();
+  };
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -56,4 +56,4 @@ export const queryClient = new QueryClient({
       retry: false,
     },
   },
-})
+});
