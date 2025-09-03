@@ -5,56 +5,78 @@ import {
   Shirt,
   Sparkles,
   TrendingUp,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ProductCard } from "@/components/ProductCard"
-import { Badge } from "@/components/ui/badge"
-import { useQuery } from "@tanstack/react-query"
-import { api } from "@/services/api"
-import { useLocation } from "wouter"
-import { useState } from "react"
+  Loader2,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ProductCard } from "@/components/ProductCard";
+import { Badge } from "@/components/ui/badge";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/services/api";
+import { useLocation } from "wouter";
+import { useState } from "react";
+import { encodeFilters } from "@/lib/utils";
 
 export function HomePage() {
-  const [, setLocation] = useLocation()
-  const [searchInput, setSearchInput] = useState("")
-
-  const { data: time = {} } = useQuery({
-    queryKey: ["/api/test"],
-
-    queryFn: async () => {
-      const response = await api.testApi()
-      console.log(response)
-      return response
-    },
-    enabled: true,
-  })
-
+  const [, setLocation] = useLocation();
+  const [searchInput, setSearchInput] = useState("");
+  const [searchTrigger, setSearchTrigger] = useState(false);
   const { data: featuredProducts = [] } = useQuery({
     queryKey: ["/api/products/featured"],
     queryFn: () => api.getFeaturedProducts(),
-  })
+  });
 
   const { data: allProducts = [] } = useQuery({
     queryKey: ["/api/products"],
     queryFn: () => api.getProducts(),
-  })
+  });
+
+  const { data, isLoading: searchLoading } = useQuery({
+    queryKey: ["searchFilters", searchInput.trim()],
+    queryFn: async () => {
+      const response = await fetch(
+        "https://webnbit.com:5100/api/search/filters",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Drmhze6EPcv0fN_81Bj-nA",
+          },
+          body: JSON.stringify({
+            user_prompt: searchInput.trim(),
+          }),
+        }
+      );
+      const data = await response.json();
+      console.log(data);
+      const params = encodeFilters(data.filters);
+
+      console.log(params);
+      setSearchTrigger(false);
+      setLocation(`/products?${params}`);
+      return data;
+    },
+    gcTime: 0,
+    enabled: searchTrigger,
+  });
 
   const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (searchInput.trim()) {
-      setLocation(`/products?search=${encodeURIComponent(searchInput.trim())}`)
+      if (setSearchTrigger) setSearchTrigger(false);
+      setSearchTrigger(true);
     }
-  }
+  };
 
   const handleSuggestionClick = (suggestion: string) => {
-    setSearchInput(suggestion)
-    setLocation(`/products?search=${encodeURIComponent(suggestion)}`)
-  }
+    setSearchInput(suggestion);
+    if (setSearchTrigger) setSearchTrigger(false);
+    setSearchTrigger(true);
+  };
 
   const searchSuggestions = [
     {
-      text: "Show me trending sneakers under $200",
+      text: "Luxury shoes between $150 and $300",
       icon: TrendingUp,
       category: "Popular",
     },
@@ -83,28 +105,28 @@ export function HomePage() {
       icon: ShoppingBag,
       category: "Work",
     },
-  ]
+  ];
 
   // Get new products (most recent 4)
   const newProducts = [...allProducts]
     .sort((a, b) => b.product_id - a.product_id)
-    .slice(0, 4)
+    .slice(0, 4);
 
   // Get top selling products (highest rated)
   const topSellingProducts = [...allProducts]
     .sort((a, b) => {
-      const ratingA = parseFloat(a.product_rating || "0")
-      const ratingB = parseFloat(b.product_rating || "0")
-      return ratingB - ratingA
+      const ratingA = parseFloat(a.product_rating || "0");
+      const ratingB = parseFloat(b.product_rating || "0");
+      return ratingB - ratingA;
     })
-    .slice(0, 4)
+    .slice(0, 4);
 
   const categories = [
     { name: "Shoes", icon: ShoppingBag, value: "Shoes" },
     { name: "Bags", icon: ShoppingBag, value: "Handbag" },
     { name: "Makeup", icon: Palette, value: "Makeup" },
     { name: "Clothing", icon: Shirt, value: "Clothing" },
-  ]
+  ];
 
   return (
     <div>
@@ -135,7 +157,7 @@ export function HomePage() {
                   type="text"
                   placeholder="Ask me anything... 'Show me trending sneakers under $200'"
                   value={searchInput}
-                  onChange={e => setSearchInput(e.target.value)}
+                  onChange={(e) => setSearchInput(e.target.value)}
                   className="w-full pl-16 pr-32 py-6 rounded-2xl text-gray-900 text-lg bg-white/95 backdrop-blur-sm border-0 ai-search-glow focus:ring-4 focus:ring-blue-300/50"
                 />
                 <div className="absolute left-4 top-1/2 transform -translate-y-1/2 flex items-center">
@@ -145,8 +167,16 @@ export function HomePage() {
                   type="submit"
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-xl hover:from-blue-700 hover:to-purple-700 shadow-lg"
                 >
-                  <Search className="h-4 w-4 mr-2" />
-                  Search
+                  {searchLoading ? (
+                    <span>
+                      <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                    </span>
+                  ) : (
+                    <>
+                      <Search className="h-4 w-4 mr-2" />
+                      Search
+                    </>
+                  )}
                 </Button>
               </div>
             </form>
@@ -158,7 +188,7 @@ export function HomePage() {
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {searchSuggestions.map((suggestion, index) => {
-                  const IconComponent = suggestion.icon
+                  const IconComponent = suggestion.icon;
                   return (
                     <button
                       key={index}
@@ -182,7 +212,7 @@ export function HomePage() {
                         </div>
                       </div>
                     </button>
-                  )
+                  );
                 })}
               </div>
             </div>
@@ -190,8 +220,8 @@ export function HomePage() {
 
           {/* Category Icons */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 opacity-80">
-            {categories.map(category => {
-              const IconComponent = category.icon
+            {categories.map((category) => {
+              const IconComponent = category.icon;
               return (
                 <div
                   key={category.value}
@@ -203,7 +233,7 @@ export function HomePage() {
                   <IconComponent className="h-8 w-8 mx-auto mb-2" />
                   <p>{category.name}</p>
                 </div>
-              )
+              );
             })}
           </div>
         </div>
@@ -222,7 +252,7 @@ export function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProducts.slice(0, 4).map(product => (
+            {featuredProducts.slice(0, 4).map((product) => (
               <ProductCard key={product.product_id} product={product} />
             ))}
           </div>
@@ -242,7 +272,7 @@ export function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {newProducts.map(product => (
+            {newProducts.map((product) => (
               <ProductCard key={product.product_id} product={product} />
             ))}
           </div>
@@ -260,12 +290,12 @@ export function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {topSellingProducts.map(product => (
+            {topSellingProducts.map((product) => (
               <ProductCard key={product.product_id} product={product} />
             ))}
           </div>
         </div>
       </section>
     </div>
-  )
+  );
 }

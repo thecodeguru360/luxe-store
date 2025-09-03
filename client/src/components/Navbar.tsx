@@ -31,7 +31,12 @@ export function Navbar() {
     error,
   } = useQuery({
     queryKey: ["/api/products/brands"],
-    queryFn: () => api.getBrands(),
+    queryFn: () => {
+      return api.getBrands();
+    },
+    select: (response) => {
+      return response.brands;
+    },
     enabled: true,
   });
 

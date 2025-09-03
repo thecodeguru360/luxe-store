@@ -1,50 +1,68 @@
-import { useState, useEffect } from 'react';
-import { useLocation } from 'wouter';
-import { ProductCard } from '@/components/ProductCard';
-import { ProductFilters } from '@/components/ProductFilters';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '@/services/api';
-import { Skeleton } from '@/components/ui/skeleton';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { type ProductType } from '@shared/schema';
+import { useState, useEffect, useMemo } from "react";
+import { useLocation, useSearch, useSearchParams } from "wouter";
+import { ProductCard } from "@/components/ProductCard";
+import { ProductFilters } from "@/components/ProductFilters";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/services/api";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { type ProductType } from "@shared/schema";
+import { decodeFilters } from "@/lib/utils";
 
 export function ProductsPage() {
   const [location] = useLocation();
-  const [sortBy, setSortBy] = useState('featured');
+  const searchString = useSearch();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [sortBy, setSortBy] = useState("featured");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
-  // Parse URL parameters
-  const urlParams = new URLSearchParams(location.split('?')[1] || '');
-  const typeFilter = urlParams.get('type') as ProductType | null;
-  const brandFilter = urlParams.get('brand');
-  const searchQuery = urlParams.get('search');
+  // useEffect(() => {
+  //   let filters: { [k: string]: unknown } = {};
+  //   searchParams.forEach((value: unknown, key: string) => {
+  //     filters[key] = value;
+  //   });
+  //   console.log(filters);
+  // }, []);
+  const filters = useMemo(() => decodeFilters(searchString), [searchString]);
 
-  const filters = {
-    ...(typeFilter && { type: typeFilter }),
-    ...(brandFilter && { brand: brandFilter }),
-    ...(searchQuery && { search: searchQuery }),
-  };
+  // const filters = useMemo(() => {
+  //   const obj: Record<string, string> = {};
+  //   searchParams.forEach((value, key) => {
+  //     if (key.startsWith("f_")) {
+  //       obj[key.slice(2)] = value; // remove "f_"
+  //     }
+  //   });
+  //   return obj;
+  // }, [searchParams]);
+
+  console.log(filters);
 
   const { data: products = [], isLoading } = useQuery({
-    queryKey: ['/api/products', filters],
+    queryKey: ["/api/products", filters],
     queryFn: () => api.getProducts(filters),
   });
 
   // Sort products based on selected criteria
   const sortedProducts = [...products].sort((a, b) => {
     switch (sortBy) {
-      case 'price-low':
+      case "price-low":
         return parseFloat(a.price) - parseFloat(b.price);
-      case 'price-high':
+      case "price-high":
         return parseFloat(b.price) - parseFloat(a.price);
-      case 'newest':
+      case "newest":
         return b.product_id - a.product_id;
-      case 'rating':
-        const ratingA = parseFloat(a.product_rating || '0');
-        const ratingB = parseFloat(b.product_rating || '0');
+      case "rating":
+        const ratingA = parseFloat(a.product_rating || "0");
+        const ratingB = parseFloat(b.product_rating || "0");
         return ratingB - ratingA;
       default:
         return (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0);
@@ -54,18 +72,14 @@ export function ProductsPage() {
   // Pagination
   const totalPages = Math.ceil(sortedProducts.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedProducts = sortedProducts.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedProducts = sortedProducts.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   const getPageTitle = () => {
-    if (searchQuery) return `Search Results for "${searchQuery}"`;
-    if (typeFilter) return `${typeFilter} Products`;
-    if (brandFilter) return `${brandFilter} Products`;
-    return 'All Products';
+    return "All Products";
   };
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [typeFilter, brandFilter, searchQuery]);
 
   if (isLoading) {
     return (
@@ -98,7 +112,9 @@ export function ProductsPage() {
         <div className="lg:w-3/4">
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-            <h2 className="text-2xl font-bold mb-4 sm:mb-0">{getPageTitle()}</h2>
+            <h2 className="text-2xl font-bold mb-4 sm:mb-0">
+              {getPageTitle()}
+            </h2>
             <div className="flex items-center space-x-4">
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="w-48">
@@ -117,14 +133,18 @@ export function ProductsPage() {
 
           {/* Results Count */}
           <p className="text-gray-600 mb-6">
-            Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, sortedProducts.length)} of {sortedProducts.length} results
+            Showing {startIndex + 1}-
+            {Math.min(startIndex + itemsPerPage, sortedProducts.length)} of{" "}
+            {sortedProducts.length} results
           </p>
 
           {/* Products Grid */}
           {paginatedProducts.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 text-lg">No products found.</p>
-              <p className="text-gray-400">Try adjusting your filters or search terms.</p>
+              <p className="text-gray-400">
+                Try adjusting your filters or search terms.
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -146,26 +166,30 @@ export function ProductsPage() {
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                
+
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                   const page = i + 1;
                   return (
                     <Button
                       key={page}
-                      variant={currentPage === page ? 'default' : 'outline'}
+                      variant={currentPage === page ? "default" : "outline"}
                       size="sm"
                       onClick={() => setCurrentPage(page)}
-                      className={currentPage === page ? 'bg-blue-600 text-white' : ''}
+                      className={
+                        currentPage === page ? "bg-blue-600 text-white" : ""
+                      }
                     >
                       {page}
                     </Button>
                   );
                 })}
-                
+
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  onClick={() =>
+                    setCurrentPage(Math.min(totalPages, currentPage + 1))
+                  }
                   disabled={currentPage === totalPages}
                 >
                   <ChevronRight className="h-4 w-4" />
