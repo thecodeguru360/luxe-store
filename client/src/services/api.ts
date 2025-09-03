@@ -18,28 +18,22 @@ export const api = {
     return resquest.json();
   },
 
-  getBrands: async (): Promise<string[]> => {
+  getBrands: async (): Promise<{ brands: string[] }> => {
     const response = await apiRequest("GET", "/api/products/brands");
     return response.json();
   },
 
   // Product API
   getProducts: async (filters?: ProductFilters): Promise<Product[]> => {
-    const params = new URLSearchParams();
-    console.log(params.toString());
     if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") {
-          params.append(key, String(value));
-        }
-      });
+      const url = `/api/products/list`;
+      const response = await apiRequest("POST", url, { filters: filters });
+      return response.json();
+    } else {
+      const url = `/api/products/list`;
+      const response = await apiRequest("GET", url);
+      return response.json();
     }
-
-    const url = `/api/products/list${
-      params.toString() ? `?${params.toString()}` : ""
-    }`;
-    const response = await apiRequest("GET", url);
-    return response.json();
   },
 
   getFeaturedProducts: async (): Promise<Product[]> => {
